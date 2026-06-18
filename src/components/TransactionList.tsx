@@ -267,8 +267,8 @@ export default function TransactionList({
         </div>
       </div>
 
-      {/* LEDGER DATA TABLE */}
-      <div className="overflow-x-auto -mx-4 md:mx-0 border border-slate-100 rounded-lg shadow-3xs">
+      {/* LEDGER DATA TABLE - DESKTOP VIEW */}
+      <div id="ledger-desktop-table" className="hidden md:block overflow-x-auto border border-slate-100 rounded-lg shadow-3xs">
         <table className="w-full border-collapse text-left text-xs text-slate-605">
           <thead>
             <tr className="border-b border-[#e2e8f0] text-slate-400 font-bold uppercase tracking-wider bg-slate-50 text-[9px] font-mono">
@@ -369,7 +369,7 @@ export default function TransactionList({
                             id={`edit-tx-${t.id}`}
                             type="button"
                             onClick={() => onEditTransaction(t)}
-                            className="p-1 px-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded transition-colors"
+                            className="p-1 px-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded transition-colors cursor-pointer"
                             title="Editar transação"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -379,7 +379,7 @@ export default function TransactionList({
                           id={`delete-tx-${t.id}`}
                           type="button"
                           onClick={() => onDeleteTransaction(t.id)}
-                          className="p-1 px-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
+                          className="p-1 px-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"
                           title="Remover de forma definitiva"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -392,6 +392,109 @@ export default function TransactionList({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* LEDGER DATA CARDS - MOBILE VIEW */}
+      <div id="ledger-mobile-cards" className="block md:hidden space-y-3">
+        {filteredTransactions.length === 0 ? (
+          <div className="bg-white rounded-lg border border-slate-150 p-10 text-center text-slate-450">
+            <div className="flex flex-col items-center justify-center gap-1.5">
+              <AlertOctagon className="w-8 h-8 text-slate-350" />
+              <p className="font-bold text-slate-500">Nenhuma movimentação localizada</p>
+              <p className="text-xs">Tente reajustar seus filtros no menu de pesquisa ou redefina os meses.</p>
+            </div>
+          </div>
+        ) : (
+          filteredTransactions.map((t) => {
+            const isProf = t.scope === TransactionScope.PROFESSIONAL;
+            const isRevenue = t.type === TransactionType.REVENUE;
+            const isPersonalLeak = t.scope === TransactionScope.PERSONAL && t.isAiCategorized;
+
+            return (
+              <div 
+                id={`transaction-card-${t.id}`}
+                key={t.id} 
+                className={`bg-white rounded-xl border p-4 shadow-3xs transition-all space-y-3 ${
+                  isPersonalLeak ? "bg-amber-50/20 border-amber-200" : "border-slate-150"
+                }`}
+              >
+                {/* Header row: Date and Scope Status */}
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-slate-500 font-bold text-[11px] bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
+                    {t.date.split("-").reverse().join("/")}
+                  </span>
+                  
+                  <div className="flex items-center gap-1.5">
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                      isProf 
+                        ? "bg-indigo-50 text-indigo-700 border-indigo-100" 
+                        : "bg-sky-50 text-sky-700 border-sky-100"
+                    }`}>
+                      {isProf ? <Briefcase className="w-2.5 h-2.5" /> : <User className="w-2.5 h-2.5" />}
+                      {isProf ? "PJ Escritório" : "PF Pessoal"}
+                    </span>
+                    
+                    {isPersonalLeak && (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
+                        <AlertOctagon className="w-2.5 h-2.5 text-amber-600" />
+                        Mistura PJ/PF
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Description and notes */}
+                <div className="space-y-1">
+                  <h4 className="font-bold text-slate-900 text-xs sm:text-sm leading-snug">{t.description}</h4>
+                  {t.notes && <p className="text-[11px] text-slate-450 bg-slate-50/40 p-1.5 rounded border border-slate-100">{t.notes}</p>}
+                  
+                  {/* Category & payment method details */}
+                  <div className="flex flex-wrap gap-x-2.5 gap-y-1 mt-2 text-[10px] sm:text-xs text-slate-500">
+                    <div>
+                      <span className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">Categoria:</span> {t.category}
+                    </div>
+                    {t.paymentMethod && (
+                      <div>
+                        • <span className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">Pagamento:</span> {t.paymentMethod}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer row: Value and touch action buttons */}
+                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                  <span className={`text-[13px] sm:text-sm font-extrabold font-mono ${isRevenue ? "text-emerald-600" : "text-rose-500"}`}>
+                    {isRevenue ? "+" : "-"} {formatCurrency(t.amount)}
+                  </span>
+                  
+                  {/* Highly visible Edit & Delete triggers for smaller displays */}
+                  <div className="flex items-center gap-1.5">
+                    {onEditTransaction && (
+                      <button
+                        id={`edit-card-tx-${t.id}`}
+                        type="button"
+                        onClick={() => onEditTransaction(t)}
+                        className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded border border-indigo-100 font-bold transition-all cursor-pointer"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                        Editar
+                      </button>
+                    )}
+                    <button
+                      id={`delete-card-tx-${t.id}`}
+                      type="button"
+                      onClick={() => onDeleteTransaction(t.id)}
+                      className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-rose-700 bg-rose-50 hover:bg-rose-100 rounded border border-rose-100 font-bold transition-all cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
