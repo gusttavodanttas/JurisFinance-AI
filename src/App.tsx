@@ -42,16 +42,58 @@ const InlineLogin: React.FC<{onLogin: () => void}> = ({ onLogin }) => {
   const [pw, setPw] = React.useState("");
   const [err, setErr] = React.useState("");
   return (
-    <div style={{ minHeight: "100vh", background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: "#1e293b", borderRadius: "16px", padding: "40px", width: "360px", border: "1px solid #334155" }}>
-        <h1 style={{ color: "white", textAlign: "center", marginBottom: "8px" }}>Dantas & Associados</h1>
-        <p style={{ color: "#64748b", textAlign: "center", marginBottom: "32px", fontSize: "14px" }}>Controle Financeiro</p>
-        <form onSubmit={(e) => { e.preventDefault(); if (pw === "GD2026") { sessionStorage.setItem("gd_auth","true"); onLogin(); } else { setErr("Senha incorreta."); setPw(""); } }}>
-          <input type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="Digite a senha" autoFocus
-            style={{ width: "100%", background: "#0f172a", border: "1px solid #334155", borderRadius: "8px", padding: "12px 16px", color: "white", fontSize: "14px", outline: "none", boxSizing: "border-box" as const }} />
-          {err && <p style={{ color: "#f87171", fontSize: "13px", marginTop: "8px" }}>{err}</p>}
-          <button type="submit" style={{ marginTop: "16px", width: "100%", background: "#3b82f6", color: "white", border: "none", borderRadius: "8px", padding: "12px", fontSize: "15px", fontWeight: 600, cursor: "pointer" }}>Entrar</button>
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-sm w-full shadow-2xl text-center space-y-6">
+        <div className="space-y-2">
+          <div className="mx-auto w-12 h-12 rounded-xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+            <Scale className="w-6 h-6" />
+          </div>
+          <h1 className="text-xl font-bold text-white tracking-tight">Dantas & Associados</h1>
+          <p className="text-xs text-slate-400">Controle de Advocacia e Finanças Integradas</p>
+        </div>
+
+        <form 
+          onSubmit={(e) => { 
+            e.preventDefault(); 
+            if (pw === "GD2026" || pw.toUpperCase() === "GD2026") { 
+              sessionStorage.setItem("gd_auth", "true"); 
+              onLogin(); 
+            } else { 
+              setErr("Senha incorreta."); 
+              setPw(""); 
+            } 
+          }}
+          className="space-y-4"
+        >
+          <div className="space-y-2 text-left">
+            <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Acesso Restrito</label>
+            <input 
+              type="password" 
+              value={pw} 
+              onChange={e => setPw(e.target.value)} 
+              placeholder="Digite a senha de acesso"
+              autoFocus
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white placeholder-slate-600 focus:outline-hidden focus:border-violet-500 font-mono text-center"
+            />
+            {err && <p className="text-xs text-rose-500 font-medium text-center">{err}</p>}
+          </div>
+
+          <button 
+            type="submit" 
+            className="w-full py-2.5 bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white font-bold text-xs rounded-lg transition-all shadow-md cursor-pointer hover:shadow-violet-600/10 uppercase tracking-widest"
+          >
+            Entrar no Painel
+          </button>
         </form>
+
+        <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-center">
+          <p className="text-[10px] text-slate-500 leading-normal">
+            Código de acesso padrão pré-configurado:
+          </p>
+          <p className="text-xs font-mono font-bold text-emerald-500 mt-1">
+            GD2026
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -85,15 +127,43 @@ export default function App() {
     const saved = localStorage.getItem("oab_priority_bills_v1");
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map((b: any) => ({
+            ...b,
+            month: b.month || "2026-06"
+          }));
+        }
       } catch (e) {
         console.error("Erro ao carregar contas de priorização:", e);
       }
     }
-    return INITIAL_PRIORITY_BILLS;
+    return INITIAL_PRIORITY_BILLS.map(b => ({
+      ...b,
+      month: "2026-06"
+    }));
   });
 
   const [selectedMonth, setSelectedMonth] = useState<string>("2026-06"); // Defaults to June 2026
+
+  // Auto-populate selected month with templates if it has no bills
+  useEffect(() => {
+    if (selectedMonth && selectedMonth !== "ALL") {
+      setPriorityBills((prev) => {
+        const hasBills = prev.some(b => b.month === selectedMonth);
+        if (!hasBills) {
+          const newMonthBills = INITIAL_PRIORITY_BILLS.map(b => ({
+            ...b,
+            id: `pb-${selectedMonth}-${b.id}-${Math.random().toString(36).substring(2, 6)}`,
+            month: selectedMonth,
+            paid: false,
+          }));
+          return [...prev, ...newMonthBills];
+        }
+        return prev;
+      });
+    }
+  }, [selectedMonth]);
   const [activeTab, setActiveTab] = useState<"dashboard" | "ai" | "ledger" | "priorities" | "report" | "whatsapp">("priorities");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
@@ -135,12 +205,23 @@ export default function App() {
   }, [priorityBills]);
 
   const handleResetPriorityBills = () => {
+    const targetMonth = selectedMonth === "ALL" ? "2026-06" : selectedMonth;
+    const formattedMonth = targetMonth.split("-").reverse().join("/");
     setConfirmModal({
       isOpen: true,
-      title: "Redefinir Prioridades",
-      message: "Deseja redefinir a lista de prioridades de despesas para as contas padrão (R$ 8.519,00 PAGAR / R$ 6.507,00 ESPERAR)?",
+      title: `Redefinir Prioridades • ${formattedMonth}`,
+      message: `Deseja redefinir a lista de prioridades de despesas do mês ${formattedMonth} para as contas padrão (R$ 8.519,00 PAGAR / R$ 6.507,00 ESPERAR)?`,
       onConfirm: () => {
-        setPriorityBills(INITIAL_PRIORITY_BILLS);
+        setPriorityBills((prev) => {
+          const otherMonthsBills = prev.filter((b) => b.month !== targetMonth);
+          const defaultBillsForMonth = INITIAL_PRIORITY_BILLS.map((b) => ({
+            ...b,
+            id: `pb-${targetMonth}-${b.id}-${Math.random().toString(36).substring(2, 6)}`,
+            month: targetMonth,
+            paid: false,
+          }));
+          return [...otherMonthsBills, ...defaultBillsForMonth];
+        });
       }
     });
   };
@@ -685,36 +766,55 @@ export default function App() {
         )}
 
         {/* VIEW 5: ACCOUNT PRIORITIES MANAGEMENT PANEL */}
-        {activeTab === "priorities" && (
-          <div id="view-priorities-container" className="space-y-6">
-            <div className="flex justify-between items-center border-l-4 border-indigo-600 pl-3">
-              <div>
-                <h2 className="text-xl font-bold tracking-tight text-slate-900">Priorização de Despesas de Caixa</h2>
-                <p className="text-xs text-slate-500">Despesas e obrigações de junho e meses anteriores: Pagar vs Esperar</p>
-              </div>
-            </div>
+        {activeTab === "priorities" && (() => {
+          const targetMonthForPriorities = selectedMonth === "ALL" ? "2026-06" : selectedMonth;
+          const currentMonthBills = priorityBills.filter(b => b.month === targetMonthForPriorities);
 
-            <ExpensePrioritizer
-              bills={priorityBills}
-              onUpdateBills={setPriorityBills}
-              onResetBills={handleResetPriorityBills}
-              onAddTransactionToLedger={(item) => {
-                const newTx: Transaction = {
-                  id: "tx-pb-" + Math.random().toString(36).substring(2, 9),
-                  date: item.date,
-                  description: item.description,
-                  type: TransactionType.EXPENSE,
-                  scope: item.scope,
-                  category: item.category,
-                  amount: item.amount,
-                  paymentMethod: "Outros",
-                  notes: "Registrado via painel de priorização de despesas a pagar.",
-                };
-                setTransactions((prev) => [newTx, ...prev]);
-              }}
-            />
-          </div>
-        )}
+          const handleUpdateCurrentMonthBills = (updatedMonthBills: PriorityBill[]) => {
+            setPriorityBills((prev) => {
+              const otherMonthsBills = prev.filter(b => b.month !== targetMonthForPriorities);
+              // Ensure all updated/added bills are marked with current selected month
+              const processed = updatedMonthBills.map(b => ({ ...b, month: targetMonthForPriorities }));
+              return [...otherMonthsBills, ...processed];
+            });
+          };
+
+          const parts = targetMonthForPriorities.split("-");
+          const ptMonths = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+          const readableMonth = `${ptMonths[parseInt(parts[1]) - 1]} de ${parts[0]}`;
+
+          return (
+            <div id="view-priorities-container" className="space-y-6">
+              <div className="flex justify-between items-center border-l-4 border-indigo-600 pl-3">
+                <div>
+                  <h2 className="text-xl font-bold tracking-tight text-slate-900">Priorização de Despesas de Caixa ({readableMonth})</h2>
+                  <p className="text-xs text-slate-500">Abater ou reter despesas e compromissos fiscais de {readableMonth}: Pagar vs Esperar</p>
+                </div>
+              </div>
+
+              <ExpensePrioritizer
+                bills={currentMonthBills}
+                onUpdateBills={handleUpdateCurrentMonthBills}
+                onResetBills={handleResetPriorityBills}
+                selectedMonth={targetMonthForPriorities}
+                onAddTransactionToLedger={(item) => {
+                  const newTx: Transaction = {
+                    id: "tx-pb-" + Math.random().toString(36).substring(2, 9),
+                    date: item.date,
+                    description: item.description,
+                    type: TransactionType.EXPENSE,
+                    scope: item.scope,
+                    category: item.category,
+                    amount: item.amount,
+                    paymentMethod: "Outros",
+                    notes: `Registrado via painel de priorização de despesas de ${readableMonth}.`,
+                  };
+                  setTransactions((prev) => [newTx, ...prev]);
+                }}
+              />
+            </div>
+          );
+        })()}
 
         {/* VIEW 6: WHATSAPP SYSTEM TAB */}
         {activeTab === "whatsapp" && (
