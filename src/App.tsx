@@ -110,6 +110,17 @@ export default function App() {
     return localStorage.getItem("oab_office_sub") || "DANTAS & ASSOCIADOS";
   });
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
 
   // Sync with local storage
   useEffect(() => {
@@ -121,9 +132,14 @@ export default function App() {
   }, [priorityBills]);
 
   const handleResetPriorityBills = () => {
-    if (confirm("Deseja redefinir a lista de prioridades de despesas para as contas padrão (R$ 8.519,00 PAGAR / R$ 6.507,00 ESPERAR)?")) {
-      setPriorityBills(INITIAL_PRIORITY_BILLS);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: "Redefinir Prioridades",
+      message: "Deseja redefinir a lista de prioridades de despesas para as contas padrão (R$ 8.519,00 PAGAR / R$ 6.507,00 ESPERAR)?",
+      onConfirm: () => {
+        setPriorityBills(INITIAL_PRIORITY_BILLS);
+      }
+    });
   };
 
   const handleAddTransactions = (newItems: Omit<Transaction, "id">[]) => {
@@ -143,16 +159,26 @@ export default function App() {
   };
 
   const handleDeleteTransaction = (id: string) => {
-    if (confirm("Deseja realmente remover este lançamento permanente?")) {
-      setTransactions((prev) => prev.filter((t) => t.id !== id));
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: "Remover Lançamento",
+      message: "Deseja realmente remover este lançamento de forma definitiva do seu livro caixa?",
+      onConfirm: () => {
+        setTransactions((prev) => prev.filter((t) => t.id !== id));
+      }
+    });
   };
 
   const handleResetData = () => {
-    if (confirm("⚠️ Deseja restaurar a base de dados para o modelo demonstrativo inicial do escritório (limpará dados manuais)?")) {
-      setTransactions(INITIAL_TRANSACTIONS);
-      setSelectedMonth("2026-06");
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: "Restaurar Banco de Dados",
+      message: "⚠️ Deseja restaurar a base de dados para o modelo demonstrativo inicial do escritório? Isso limpará de forma permanente todas as transações manuais criadas por você.",
+      onConfirm: () => {
+        setTransactions(INITIAL_TRANSACTIONS);
+        setSelectedMonth("2026-06");
+      }
+    });
   };
 
   // Profile Save action
@@ -753,6 +779,47 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Elegante Modal de Confirmação Customizado (substituto seguro do confirm do navegador) */}
+      {confirmModal.isOpen && (
+        <div id="custom-confirm-modal" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-xs">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-250 max-w-sm w-full p-6 space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="p-2.5 rounded-full bg-rose-50 text-rose-600 flex-shrink-0">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div className="space-y-1.5">
+                <h4 className="text-sm font-bold text-slate-900">{confirmModal.title}</h4>
+                <p className="text-xs text-slate-500 leading-relaxed font-sans">{confirmModal.message}</p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-2 pt-2.5 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+                className="px-3.5 py-1.5 hover:bg-slate-150 text-slate-500 hover:text-slate-700 font-semibold text-xs rounded-lg transition-colors cursor-pointer bg-slate-100 border border-slate-200"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    confirmModal.onConfirm();
+                  } catch (err) {
+                    console.error("Erro ao executar confirmação:", err);
+                  }
+                  setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+                }}
+                className="px-4 py-1.5 bg-rose-600 hover:bg-rose-750 text-white font-bold text-xs rounded-lg transition-colors shadow-xs cursor-pointer"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );
