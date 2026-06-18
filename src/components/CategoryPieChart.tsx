@@ -84,22 +84,51 @@ export default function CategoryPieChart({ transactions, selectedMonth }: Catego
               <span>Nenhuma despesa de escritório lançada neste ciclo.</span>
             </div>
           ) : (
-            profStats.list.map((item, idx) => (
-              <div id={`prof-cat-${idx}`} key={item.category} className="space-y-1">
-                <div className="flex justify-between text-xs font-semibold text-slate-705">
-                  <span className="truncate max-w-[65%]">{item.category}</span>
-                  <span className="text-slate-500 flex-shrink-0 font-mono text-[11px] font-medium">
-                    {formatCurrency(item.amount)} ({item.percentage.toFixed(0)}%)
-                  </span>
+            profStats.list.map((item, idx) => {
+              const itemExpenses = profExpenses
+                .filter((e) => e.category === item.category)
+                .sort((a, b) => b.amount - a.amount);
+
+              return (
+                <div 
+                  id={`prof-cat-${idx}`} 
+                  key={item.category} 
+                  className="space-y-1 relative group cursor-help p-1.5 hover:bg-blue-50/40 rounded-md transition-all"
+                >
+                  <div className="flex justify-between text-xs font-semibold text-slate-700">
+                    <span className="truncate max-w-[65%] group-hover:text-blue-600 transition-colors">{item.category}</span>
+                    <span className="text-slate-500 flex-shrink-0 font-mono text-[11px] font-medium">
+                      {formatCurrency(item.amount)} ({item.percentage.toFixed(0)}%)
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-300 ${getProgressColorClass(idx, TransactionScope.PROFESSIONAL)}`}
+                      style={{ width: `${item.percentage}%` }}
+                    />
+                  </div>
+
+                  {/* HOVER TOOLTIP WITH TRANSACTION DETAILS */}
+                  <div className="absolute left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-0 mt-2 top-full z-50 hidden group-hover:block w-72 bg-slate-900 border border-slate-700 text-white rounded-lg p-3 shadow-xl pointer-events-none transition-all duration-150">
+                    <div className="border-b border-slate-700 pb-1.5 mb-2 flex justify-between items-center">
+                      <span className="font-bold text-[10px] uppercase text-sky-400 tracking-wider">Despesas em {item.category}</span>
+                      <span className="text-[10px] text-slate-400 font-mono font-bold bg-slate-800 px-1.5 py-0.5 rounded">{itemExpenses.length} lancs</span>
+                    </div>
+                    <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1 text-[10.5px]">
+                      {itemExpenses.map((tx) => (
+                        <div key={tx.id} className="flex justify-between items-start gap-2 border-b border-slate-800/50 pb-1 last:border-0 last:pb-0">
+                          <div className="min-w-0">
+                            <span className="text-[9px] text-slate-400 font-mono mr-1.5">{tx.date.split("-").reverse().slice(0, 2).join("/")}</span>
+                            <span className="text-slate-200 font-medium truncate">{tx.description}</span>
+                          </div>
+                          <span className="font-mono text-amber-300 font-bold ml-auto shrink-0">{formatCurrency(tx.amount)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full rounded-full transition-all duration-300 ${getProgressColorClass(idx, TransactionScope.PROFESSIONAL)}`}
-                    style={{ width: `${item.percentage}%` }}
-                  />
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
@@ -125,22 +154,51 @@ export default function CategoryPieChart({ transactions, selectedMonth }: Catego
               <span>Nenhum gasto pessoal verificado no período.</span>
             </div>
           ) : (
-            persStats.list.map((item, idx) => (
-              <div id={`pers-cat-${idx}`} key={item.category} className="space-y-1">
-                <div className="flex justify-between text-xs font-semibold text-slate-705">
-                  <span className="truncate max-w-[65%]">{item.category}</span>
-                  <span className="text-slate-500 flex-shrink-0 font-mono text-[11px] font-medium">
-                    {formatCurrency(item.amount)} ({item.percentage.toFixed(0)}%)
-                  </span>
+            persStats.list.map((item, idx) => {
+              const itemExpenses = persExpenses
+                .filter((e) => e.category === item.category)
+                .sort((a, b) => b.amount - a.amount);
+
+              return (
+                <div 
+                  id={`pers-cat-${idx}`} 
+                  key={item.category} 
+                  className="space-y-1 relative group cursor-help p-1.5 hover:bg-violet-50/40 rounded-md transition-all"
+                >
+                  <div className="flex justify-between text-xs font-semibold text-slate-700">
+                    <span className="truncate max-w-[65%] group-hover:text-violet-600 transition-colors">{item.category}</span>
+                    <span className="text-slate-500 flex-shrink-0 font-mono text-[11px] font-medium">
+                      {formatCurrency(item.amount)} ({item.percentage.toFixed(0)}%)
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-300 ${getProgressColorClass(idx, TransactionScope.PERSONAL)}`}
+                      style={{ width: `${item.percentage}%` }}
+                    />
+                  </div>
+
+                  {/* HOVER TOOLTIP WITH TRANSACTION DETAILS */}
+                  <div className="absolute left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-0 mt-2 top-full z-50 hidden group-hover:block w-72 bg-slate-900 border border-slate-700 text-white rounded-lg p-3 shadow-xl pointer-events-none transition-all duration-150">
+                    <div className="border-b border-slate-700 pb-1.5 mb-2 flex justify-between items-center">
+                      <span className="font-bold text-[10px] uppercase text-violet-400 tracking-wider">Despesas em {item.category}</span>
+                      <span className="text-[10px] text-slate-400 font-mono font-bold bg-slate-800 px-1.5 py-0.5 rounded">{itemExpenses.length} lancs</span>
+                    </div>
+                    <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1 text-[10.5px]">
+                      {itemExpenses.map((tx) => (
+                        <div key={tx.id} className="flex justify-between items-start gap-2 border-b border-slate-800/50 pb-1 last:border-0 last:pb-0">
+                          <div className="min-w-0">
+                            <span className="text-[9px] text-slate-400 font-mono mr-1.5">{tx.date.split("-").reverse().slice(0, 2).join("/")}</span>
+                            <span className="text-slate-205 font-medium truncate">{tx.description}</span>
+                          </div>
+                          <span className="font-mono text-amber-300 font-bold ml-auto shrink-0">{formatCurrency(tx.amount)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full rounded-full transition-all duration-300 ${getProgressColorClass(idx, TransactionScope.PERSONAL)}`}
-                    style={{ width: `${item.percentage}%` }}
-                  />
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

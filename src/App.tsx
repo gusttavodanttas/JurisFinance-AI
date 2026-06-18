@@ -290,8 +290,8 @@ export default function App() {
       {/* PERSISTENT LEFT SIDEBAR FOR HIGH DENSITY THEME */}
       <aside className={`
         fixed inset-y-0 left-0 z-50 w-60 bg-[#0f172a] text-white flex flex-col p-4 border-r border-[#e2e8f0] transition-transform duration-300
-        md:translate-x-0 md:static md:flex shrink-0 h-screen sticky top-0
-        ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        md:translate-x-0 md:sticky md:top-0 md:flex md:h-screen shrink-0 overflow-y-auto
+        ${mobileMenuOpen ? "translate-x-0 font-sans" : "-translate-x-full md:translate-x-0"}
       `}>
         {/* Sidebar Brand Header */}
         <div className="flex items-center gap-2.5 mb-6 border-b border-slate-800 pb-4">
@@ -409,27 +409,37 @@ export default function App() {
       {/* RIGHT-HAND MAIN WORKING CONTAINER */}
       <div className="flex-grow flex flex-col min-w-0 min-h-screen">
         
-        {/* NEW COHESIVE UPPER CONTROLLERS BAR inside content */}
-        <header className="bg-white border-b border-[#e2e8f0] py-3 px-6 sticky top-0 z-30 shadow-xs">
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+        {/* NEW COHESIVE UPPER CONTROLLERS BAR inside content - Space Saving Redesign */}
+        <header className="bg-white border-b border-[#e2e8f0] py-2 px-4 sticky top-0 z-30 shadow-xs min-h-[52px] flex items-center">
+          <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-3">
             
-            {/* Context Titles */}
-            <div>
-              <span className="text-[10px] font-bold text-[#8b5cf6] uppercase tracking-widest font-mono">Controladoria de Caixa</span>
-              <h2 className="text-base font-bold text-[#1e293b] font-display flex items-center gap-1.5">
-                {activeTab === "dashboard" && "Dashboard Geral • Visão Consolidada"}
-                {activeTab === "ai" && "Conciliação & Alocação Inteligente com IA"}
-                {activeTab === "ledger" && "Livro de Movimentações (Ledger)"}
-                {activeTab === "priorities" && "Priorização de Contas (Pagar vs Esperar)"}
-                {activeTab === "report" && "Relatório Mensal Legislativo & Fiscal"}
-              </h2>
+            {/* Context Titles & Core Tab Indicator */}
+            <div className="flex items-center gap-2">
+              <button 
+                id="mobile-menu-toggle-header"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-1.5 text-slate-600 hover:text-slate-900 transition-colors border border-slate-200 rounded-md bg-slate-50 cursor-pointer"
+                title="Abrir Menu Lateral"
+              >
+                <Menu className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse hidden sm:inline-block"></span>
+                <span className="text-xs font-bold text-slate-700 tracking-wide font-sans">
+                  Controladoria Financeira
+                </span>
+                <span className="text-[8px] font-mono bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded-full border border-emerald-100 hidden sm:inline-block font-extrabold tracking-wider uppercase select-none">
+                  Ambiente Seguro
+                </span>
+              </div>
             </div>
 
-            {/* Quick action controls for high density layout */}
-            <div className="flex flex-wrap items-center gap-2.5 justify-end">
+            {/* Concise and tightly grouped interactive actions */}
+            <div className="flex items-center flex-wrap gap-1.5 justify-end">
               
-              {/* Competence dropdown with navigation arrows */}
-              <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-md border border-[#e2e8f0]">
+              {/* Competence box - highly compact */}
+              <div className="flex items-center gap-0.5 bg-slate-50 p-0.5 rounded-md border border-[#e2e8f0]">
                 <button
                   id="header-prev-month-btn"
                   onClick={handlePrevMonth}
@@ -437,22 +447,21 @@ export default function App() {
                   className="p-1 hover:bg-slate-200 rounded text-slate-600 disabled:opacity-30 cursor-pointer transition-colors"
                   title="Mês Anterior"
                 >
-                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <ChevronLeft className="w-3 h-3" />
                 </button>
 
-                <div className="flex items-center gap-1.5 px-1.5">
-                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider hidden sm:inline">Período:</span>
+                <div className="flex items-center px-1">
                   <select
                     id="competence-select-header"
-                    className="bg-transparent text-xs text-slate-800 font-bold focus:outline-hidden cursor-pointer"
+                    className="bg-transparent text-[11px] text-slate-700 font-bold focus:outline-hidden cursor-pointer"
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(e.target.value)}
                   >
-                    <option value="ALL">Todos os Períodos</option>
+                    <option value="ALL">Todo Período</option>
                     {generatedMonthsList.map((m) => {
                       const parts = m.split("-");
-                      const ptMonths = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-                      const mLabel = `${ptMonths[parseInt(parts[1]) - 1]} de ${parts[0]}`;
+                      const ptMonths = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+                      const mLabel = `${ptMonths[parseInt(parts[1]) - 1]} ${parts[0]}`;
                       return (
                         <option key={m} value={m}>
                           {mLabel}
@@ -469,63 +478,65 @@ export default function App() {
                   className="p-1 hover:bg-slate-200 rounded text-slate-600 disabled:opacity-30 cursor-pointer transition-colors"
                   title="Próximo Mês"
                 >
-                  <ChevronRight className="w-3.5 h-3.5" />
+                  <ChevronRight className="w-3 h-3" />
                 </button>
               </div>
 
-              {/* Reset Seed Database with tooltip */}
+              {/* Reset Database Button */}
               <button
                 id="header-reset-btn"
                 type="button"
                 onClick={handleResetData}
-                className="p-2 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-800 border border-[#e2e8f0] rounded-md transition-all shadow-2xs cursor-pointer"
+                className="p-1.5 bg-white hover:bg-slate-50 text-slate-400 hover:text-slate-800 border border-[#e2e8f0] rounded-md transition-all shadow-3xs cursor-pointer"
                 title="Restaurar base simulada"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
 
-              {/* Add transaction trigger */}
+              {/* New entry trigger (Compact adaptativo) */}
               <button
                 id="header-new-record-btn"
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#2563eb] hover:bg-blue-700 text-white text-xs font-bold rounded-md transition-all shadow-xs shrink-0 cursor-pointer"
+                className="flex items-center gap-1 px-2 py-1.5 bg-[#2563eb] hover:bg-blue-700 text-white text-[11px] font-bold rounded-md transition-all shadow-xs shrink-0 cursor-pointer select-none"
               >
-                <Plus className="w-3.5 h-3.5" />
-                Lançar Movimentação
+                <Plus className="w-3 h-3" />
+                <span className="hidden sm:inline">Lançar Movimentação</span>
+                <span className="sm:hidden">Lançar</span>
               </button>
 
-              {/* User Profile Badge click-to-edit */}
+              <div className="h-4 w-[1px] bg-slate-200 mx-1 hidden sm:block"></div>
+
+              {/* User Profile Badge (Minimalist & Premium) */}
               <button
                 id="header-profile-btn"
                 onClick={() => setIsEditProfileOpen(true)}
-                className="hidden sm:flex items-center gap-2.5 border-l border-slate-200 pl-3.5 py-0.5 ml-1 text-left hover:opacity-85 transition-all cursor-pointer group"
-                title="Clique para mudar o nome ou dados do escritório"
+                className="flex items-center gap-1.5 pl-1 py-0.5 text-left hover:opacity-85 transition-all cursor-pointer group"
+                title={`Configurar: ${userName} (${userOab})`}
               >
-                <div className="text-right">
-                  <div className="text-[11px] font-bold text-slate-900 leading-tight group-hover:text-violet-700 transition-colors">{userName}</div>
-                  <div className="text-[9px] text-[#64748b] font-medium leading-none flex items-center justify-end gap-0.5">
-                    {userOab} 
-                    <Edit3 className="w-2.5 h-2.5 text-slate-400 group-hover:text-violet-500" />
-                  </div>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-[#8b5cf6]/10 text-[#8b5cf6] font-bold text-xs flex items-center justify-center border border-[#8b5cf6]/20 shadow-2xs group-hover:bg-[#8b5cf6]/20 transition-all">
+                <div className="w-7 h-7 rounded-full bg-[#8b5cf6]/10 text-[#8b5cf6] font-extrabold text-[10px] flex items-center justify-center border border-[#8b5cf6]/20 shadow-xs group-hover:bg-[#8b5cf6]/20 transition-all">
                   {userName ? userName.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase() : "GD"}
                 </div>
+                <div className="hidden lg:block text-left">
+                  <div className="text-[10px] font-bold text-slate-700 leading-none flex items-center gap-0.5 group-hover:text-indigo-600 transition-colors">
+                    {userName ? userName.split(" ")[0] : "Doutor"}
+                    <Edit3 className="w-2.5 h-2.5 text-slate-400 group-hover:text-indigo-500 inline" />
+                  </div>
+                </div>
+              </button>
+
+              {/* Sair do sistema (Icon only, modern & minimalist) */}
+              <button
+                id="header-logout-btn"
+                onClick={handleLogout}
+                className="p-1.5 rounded-md text-slate-450 hover:text-red-650 hover:bg-red-50 hover:border-red-200 border border-[#e2e8f0] transition-colors cursor-pointer bg-white"
+                title="Sair do sistema"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 hover:text-red-600"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               </button>
 
             </div>
           </div>
-  
-          {/* Logout Button */}
-          <button
-            onClick={handleLogout}
-            className="ml-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-500 hover:text-red-400 hover:bg-red-50 transition-all duration-200"
-            title="Sair do sistema"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Sair
-          </button>
-      </header>
+        </header>
 
         {/* DETAILED WORKSPACE VIEW AREA */}
         <main className="flex-grow p-4 lg:p-6 space-y-6">

@@ -405,8 +405,8 @@ export default function ExpensePrioritizer({
           <div className="flex-grow">
             <h3 className="text-sm font-bold font-display text-white">Priorizador de Despesas de Caixa</h3>
             <p className="text-[11px] text-slate-350 leading-relaxed mt-1">
-              Organize outflows systematically into <b>PAGAR (Pay Now)</b> or <b>ESPERAR (Hold / Wait)</b>. Keeping them clean allows dynamic projection of needed cash.
-              Our default data maps the <b>R$ 8.519,00</b> (24 items under 3 sub-group classes) list and the <b>R$ 6.507,00</b> waiting list exactly.
+              Organize suas saídas financeiras de forma estratégica entre <b>PAGAR (Prioridade Atual)</b> ou <b>ESPERAR (Aguardar Recomposição)</b>. 
+              As contas padrão totalizam os <b>R$ 8.519,00</b> priorizados para pagamento e os <b>R$ 6.507,00</b> protegidos sob lista de espera.
             </p>
           </div>
           <button
@@ -455,7 +455,7 @@ export default function ExpensePrioritizer({
         {/* Paid / Closed total */}
         <div className="bg-white border border-[#e2e8f0] p-4 rounded-lg shadow-2xs">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold text-[#10b981] uppercase tracking-widest font-mono">BAIXADO SUCESSO</span>
+            <span className="text-[10px] font-bold text-[#10b981] uppercase tracking-widest font-mono">PAGO / CONCILIADO</span>
             <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-mono font-bold rounded">
               {countPaid} liquidados
             </span>
@@ -623,9 +623,9 @@ export default function ExpensePrioritizer({
                             onChange={(e) => handleChangeGroup(b.id, e.target.value as any)}
                             className="bg-transparent text-[10px] text-slate-500 font-bold focus:outline-hidden cursor-pointer"
                           >
-                            <option value="G1">G1 Urgent</option>
-                            <option value="G2">G2 Med</option>
-                            <option value="G3">G3 Regular</option>
+                            <option value="G1">G1 - Essencial</option>
+                            <option value="G2">G2 - Importante</option>
+                            <option value="G3">G3 - Contornável</option>
                           </select>
 
                           {/* Trigger check out payment and save on Ledger */}
@@ -692,9 +692,9 @@ export default function ExpensePrioritizer({
                             onChange={(e) => handleChangeGroup(b.id, e.target.value as any)}
                             className="bg-transparent text-[10px] text-slate-500 font-bold focus:outline-hidden cursor-pointer"
                           >
-                            <option value="G1">G1 Urgent</option>
-                            <option value="G2">G2 Med</option>
-                            <option value="G3">G3 Regular</option>
+                            <option value="G1">G1 - Essencial</option>
+                            <option value="G2">G2 - Importante</option>
+                            <option value="G3">G3 - Contornável</option>
                           </select>
 
                           <button
@@ -760,9 +760,9 @@ export default function ExpensePrioritizer({
                             onChange={(e) => handleChangeGroup(b.id, e.target.value as any)}
                             className="bg-transparent text-[10px] text-slate-500 font-bold focus:outline-hidden cursor-pointer"
                           >
-                            <option value="G1">G1 Urgent</option>
-                            <option value="G2">G2 Med</option>
-                            <option value="G3">G3 Regular</option>
+                            <option value="G1">G1 - Essencial</option>
+                            <option value="G2">G2 - Importante</option>
+                            <option value="G3">G3 - Contornável</option>
                           </select>
 
                           <button
@@ -1163,7 +1163,7 @@ export default function ExpensePrioritizer({
 
               <div className="bg-white border border-emerald-100 rounded-lg p-3.5 space-y-2 shadow-2xs">
                 <p className="font-bold text-emerald-800 flex items-center gap-1">
-                  <span className="text-[#128c7e]">2.</span> Como consultar despesas em aberto por Chatbot? (Pull Request)
+                  <span className="text-[#128c7e]">2.</span> Como consultar despesas em aberto por Chatbot? (Consulta de Dados/Pull)
                 </p>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
                   Para digitar "Listar despesas" no WhatsApp e receber a listagem instantânea extraída de forma verídica do banco de dados do sistema.
@@ -1266,7 +1266,7 @@ app.post('/api/whatsapp-webhook', async (req, res) => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5 text-slate-200">
-                  <span className="text-[9px] font-mono tracking-wider font-bold bg-[#128c7e] p-0.5 px-1.5 rounded select-none">WHATSAPP SIMULATOR</span>
+                  <span className="text-[9px] font-mono tracking-wider font-bold bg-[#128c7e] p-0.5 px-1.5 rounded select-none">SIMULADOR WHATSAPP</span>
                 </div>
               </div>
 
