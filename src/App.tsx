@@ -20,7 +20,8 @@ import {
   ChevronRight,
   Edit3,
   Save,
-  Building
+  Building,
+  MessageSquare
 } from "lucide-react";
 
 import DashboardStats from "./components/DashboardStats";
@@ -31,6 +32,7 @@ import TransactionList from "./components/TransactionList";
 import MonthlyReport from "./components/MonthlyReport";
 import NewTransactionModal from "./components/NewTransactionModal";
 import ExpensePrioritizer from "./components/ExpensePrioritizer";
+import WhatsAppTab from "./components/WhatsAppTab";
 import { INITIAL_PRIORITY_BILLS } from "./mockData";
 import { PriorityBill } from "./types";
 
@@ -92,8 +94,9 @@ export default function App() {
   });
 
   const [selectedMonth, setSelectedMonth] = useState<string>("2026-06"); // Defaults to June 2026
-  const [activeTab, setActiveTab] = useState<"dashboard" | "ai" | "ledger" | "priorities" | "report">("priorities");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "ai" | "ledger" | "priorities" | "report" | "whatsapp">("priorities");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Profile customization states
@@ -156,6 +159,10 @@ export default function App() {
       id: "tx-" + Math.random().toString(36).substring(2, 11),
     };
     setTransactions((prev) => [withId, ...prev]);
+  };
+
+  const handleUpdateTransaction = (updated: Transaction) => {
+    setTransactions((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
   };
 
   const handleDeleteTransaction = (id: string) => {
@@ -374,6 +381,20 @@ export default function App() {
           >
             <FileCheck2 className="w-4 h-4 text-[#ef4444]" />
             Relatório de Caixa
+          </button>
+
+          {/* WhatsApp Tab */}
+          <button
+            id="nav-tab-whatsapp"
+            onClick={() => { setActiveTab("whatsapp"); setMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-2.5 py-2 px-3 rounded-md text-xs font-semibold tracking-wide transition-all ${
+              activeTab === "whatsapp"
+                ? "bg-white/10 text-white font-bold shadow-xs border-l-2 border-[#8b5cf6]"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <MessageSquare className="w-4 h-4 text-[#128c7e]" />
+            Integração WhatsApp
           </button>
         </nav>
 
@@ -627,6 +648,24 @@ export default function App() {
               selectedMonth={selectedMonth}
               onSetSelectedMonth={setSelectedMonth}
               onDeleteTransaction={handleDeleteTransaction}
+              onEditTransaction={(tx) => {
+                setTransactionToEdit(tx);
+                setIsModalOpen(true);
+              }}
+              onTriggerNewTransaction={() => {
+                setTransactionToEdit(null);
+                setIsModalOpen(true);
+              }}
+              onClearAllTransactions={() => {
+                setConfirmModal({
+                  isOpen: true,
+                  title: "Excluir Todos os Lançamentos",
+                  message: "⚠️ Atenção! Isso excluirá permanentemente todos os lançamentos do livro caixa. Essa ação não pode ser desfeita e você começará com o saldo zerado. Deseja prosseguir?",
+                  onConfirm: () => {
+                    setTransactions([]);
+                  }
+                });
+              }}
             />
           </div>
         )}
@@ -677,13 +716,23 @@ export default function App() {
           </div>
         )}
 
+        {/* VIEW 6: WHATSAPP SYSTEM TAB */}
+        {activeTab === "whatsapp" && (
+          <WhatsAppTab bills={priorityBills} />
+        )}
+
       </main>
 
       {/* PERSISTENT MANUALLY MODAL FORM ENTRY */}
       <NewTransactionModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setTransactionToEdit(null);
+        }}
         onSave={handleSaveSingleTransaction}
+        onUpdate={handleUpdateTransaction}
+        initialTransaction={transactionToEdit}
       />
 
       {/* EDIT PROFILE MODAL */}

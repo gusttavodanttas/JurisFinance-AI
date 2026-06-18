@@ -853,7 +853,8 @@ export default function ExpensePrioritizer({
 
       </div>
 
-      {/* WHATSAPP INTEGRATION & ALERTS PANEL CENTER */}
+      {/* WHATSAPP INTEGRATION & ALERTS PANEL MOVED TO ANOTHER TAB */}
+      {false && (
       <div id="whatsapp-integration-section" className="bg-white border border-[#e2e8f0] rounded-xl overflow-hidden shadow-2xs space-y-0 mt-6 font-sans">
         {/* Banner header */}
         <div className="bg-[#128c7e] text-white p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1314,6 +1315,7 @@ app.post('/api/whatsapp-webhook', async (req, res) => {
           </div>
         )}
       </div>
+      )}
 
     </div>
   );

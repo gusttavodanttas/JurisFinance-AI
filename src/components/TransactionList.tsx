@@ -13,7 +13,9 @@ import {
   Sparkles,
   CalendarDays,
   FileCheck2,
-  X
+  X,
+  Plus,
+  Edit3
 } from "lucide-react";
 
 interface TransactionListProps {
@@ -21,6 +23,9 @@ interface TransactionListProps {
   selectedMonth: string;
   onSetSelectedMonth: (month: string) => void;
   onDeleteTransaction: (id: string) => void;
+  onEditTransaction?: (transaction: Transaction) => void;
+  onTriggerNewTransaction?: () => void;
+  onClearAllTransactions?: () => void;
 }
 
 export default function TransactionList({
@@ -28,6 +33,9 @@ export default function TransactionList({
   selectedMonth,
   onSetSelectedMonth,
   onDeleteTransaction,
+  onEditTransaction,
+  onTriggerNewTransaction,
+  onClearAllTransactions,
 }: TransactionListProps) {
   const [search, setSearch] = useState("");
   const [scopeFilter, setScopeFilter] = useState<"ALL" | TransactionScope>("ALL");
@@ -208,7 +216,7 @@ export default function TransactionList({
       </div>
 
       {/* FILTER VIEW SUMMARY METRICS */}
-      <div id="filter-metrics-summary" className="grid grid-cols-2 md:grid-cols-4 gap-2.5 bg-slate-50/40 p-2.5 rounded mb-4 text-[10px] border border-[#e2e8f0]">
+      <div id="filter-metrics-summary" className="grid grid-cols-2 md:grid-cols-4 gap-2.5 bg-slate-50/40 p-2.5 rounded mb-3 text-[10px] border border-[#e2e8f0]">
         <div>
           <span className="text-slate-400 font-bold uppercase tracking-wider font-mono">Faturamento PJ:</span>
           <span className="text-blue-750 font-bold font-mono block text-xs mt-0.5">{formatCurrency(filteredProfRevenue)}</span>
@@ -227,21 +235,53 @@ export default function TransactionList({
         </div>
       </div>
 
+      {/* DEDICATED QUICK HELP & ACTIONS STRIP */}
+      <div id="ledger-quick-actions-bar" className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-indigo-50/50 rounded-lg border border-indigo-120/40 mb-4">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+          <span className="text-[11px] text-slate-600 font-medium">
+            Mostrando <strong className="text-indigo-950 font-bold">{filteredTransactions.length}</strong> de <strong className="text-slate-800">{transactions.length}</strong> lançamentos escriturados.
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {onTriggerNewTransaction && (
+            <button
+              id="ledger-direct-add-btn"
+              onClick={onTriggerNewTransaction}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2563eb] hover:bg-blue-700 text-white text-[11px] font-bold rounded-md transition-all shadow-xs cursor-pointer select-none"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Lançar Movimentação
+            </button>
+          )}
+          {onClearAllTransactions && transactions.length > 0 && (
+            <button
+              id="ledger-direct-clear-btn"
+              onClick={onClearAllTransactions}
+              className="px-2.5 py-1.5 bg-white hover:bg-red-50 text-slate-500 hover:text-red-600 border border-slate-200 hover:border-red-200 text-[11px] font-semibold rounded-md transition-all cursor-pointer select-none"
+              title="Limpar todos os lançamentos cadastrados para começar do zero"
+            >
+              Excluir Tudo
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* LEDGER DATA TABLE */}
-      <div className="overflow-x-auto -mx-4 md:mx-0">
+      <div className="overflow-x-auto -mx-4 md:mx-0 border border-slate-100 rounded-lg shadow-3xs">
         <table className="w-full border-collapse text-left text-xs text-slate-605">
           <thead>
-            <tr className="border-b border-[#e2e8f0] text-slate-400 font-bold uppercase tracking-wider bg-slate-55/30 text-[9px] font-mono">
-              <th className="p-3 w-28 text-center whitespace-nowrap">Data</th>
-              <th className="p-3 whitespace-nowrap">Escopo / Alocação</th>
-              <th className="p-3">Descrição da Conta</th>
-              <th className="p-3 whitespace-nowrap">Categoria</th>
-              <th className="p-3 whitespace-nowrap text-center">Método</th>
-              <th className="p-3 text-right whitespace-nowrap">Valor Lançado</th>
-              <th className="p-3 w-12 text-center">Ações</th>
+            <tr className="border-b border-[#e2e8f0] text-slate-400 font-bold uppercase tracking-wider bg-slate-50 text-[9px] font-mono">
+              <th className="py-2.5 px-3 w-28 text-center whitespace-nowrap">Data</th>
+              <th className="py-2.5 px-3 whitespace-nowrap">Escopo / Alocação</th>
+              <th className="py-2.5 px-3 min-w-[200px]">Descrição da Conta</th>
+              <th className="py-2.5 px-3 whitespace-nowrap">Categoria</th>
+              <th className="py-2.5 px-3 whitespace-nowrap text-center">Método</th>
+              <th className="py-2.5 px-3 text-right whitespace-nowrap">Valor Lançado</th>
+              <th className="py-2.5 px-3 w-24 text-center">Ações</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 bg-white">
             {filteredTransactions.length === 0 ? (
               <tr>
                 <td colSpan={7} className="p-10 text-center text-slate-400">
@@ -267,15 +307,15 @@ export default function TransactionList({
                     className={`hover:bg-slate-50/50 transition-colors ${isPersonalLeak ? "bg-amber-50/30" : ""}`}
                   >
                     {/* Date */}
-                    <td className="p-4 font-mono font-medium text-slate-500 text-center whitespace-nowrap">
+                    <td className="py-2.5 px-3 font-mono font-medium text-slate-500 text-center whitespace-nowrap text-[11px]">
                       {t.date.split("-").reverse().join("/")}
                     </td>
 
                     {/* Scope & Tags */}
-                    <td className="p-4">
-                      <div className="flex flex-col gap-1 items-start">
+                    <td className="py-2.5 px-3 whitespace-nowrap">
+                      <div className="flex flex-col gap-0.5 items-start">
                         {/* Scope badge */}
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border ${
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${
                           isProf 
                             ? "bg-indigo-50 text-indigo-700 border-indigo-100" 
                             : "bg-sky-50 text-sky-700 border-sky-100"
@@ -286,7 +326,7 @@ export default function TransactionList({
 
                         {/* Leak Warning Banner */}
                         {isPersonalLeak && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 mt-0.5 animate-pulse">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 mt-0.5 animate-pulse">
                             <AlertOctagon className="w-2.5 h-2.5 text-amber-600" />
                             Mistura PJ/PF
                           </span>
@@ -295,43 +335,56 @@ export default function TransactionList({
                     </td>
 
                     {/* Description & notes */}
-                    <td className="p-4 max-w-sm">
-                      <div className="font-semibold text-slate-900 leading-snug">{t.description}</div>
+                    <td className="py-2.5 px-3 max-w-xs">
+                      <div className="font-semibold text-slate-900 leading-snug truncate" title={t.description}>{t.description}</div>
                       {t.notes && (
-                        <div className="text-[10px] text-slate-400 mt-0.5 leading-snug truncate" title={t.notes}>
+                        <div className="text-[10px] text-slate-400 mt-0.5 leading-snug truncate max-w-xs" title={t.notes}>
                           {t.notes}
                         </div>
                       )}
                     </td>
 
                     {/* Category */}
-                    <td className="p-4 whitespace-nowrap text-slate-500 font-medium">
+                    <td className="py-2.5 px-3 whitespace-nowrap text-slate-500 font-medium text-[11px]">
                       {t.category}
                     </td>
 
                     {/* Payment Method */}
-                    <td className="p-4 text-center whitespace-nowrap text-slate-400 text-xs">
+                    <td className="py-2.5 px-3 text-center whitespace-nowrap text-slate-400 text-[11px]">
                       {t.paymentMethod || "—"}
                     </td>
 
                     {/* Amount */}
-                    <td className="p-4 text-right font-semibold font-mono text-[13px] whitespace-nowrap">
+                    <td className="py-2.5 px-3 text-right font-semibold font-mono text-[12px] whitespace-nowrap">
                       <span className={isRevenue ? "text-emerald-600" : "text-rose-500"}>
                         {isRevenue ? "+" : "-"} {formatCurrency(t.amount)}
                       </span>
                     </td>
 
                     {/* Actions */}
-                    <td className="p-4 text-center">
-                      <button
-                        id={`delete-tx-${t.id}`}
-                        type="button"
-                        onClick={() => onDeleteTransaction(t.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                        title="Remover transação"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-1">
+                        {onEditTransaction && (
+                          <button
+                            id={`edit-tx-${t.id}`}
+                            type="button"
+                            onClick={() => onEditTransaction(t)}
+                            className="p-1 px-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded transition-colors"
+                            title="Editar transação"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          id={`delete-tx-${t.id}`}
+                          type="button"
+                          onClick={() => onDeleteTransaction(t.id)}
+                          className="p-1 px-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
+                          title="Remover de forma definitiva"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

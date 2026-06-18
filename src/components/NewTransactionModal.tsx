@@ -11,9 +11,17 @@ interface NewTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (transaction: Omit<Transaction, "id">) => void;
+  onUpdate?: (transaction: Transaction) => void;
+  initialTransaction?: Transaction | null;
 }
 
-export default function NewTransactionModal({ isOpen, onClose, onSave }: NewTransactionModalProps) {
+export default function NewTransactionModal({ 
+  isOpen, 
+  onClose, 
+  onSave,
+  onUpdate,
+  initialTransaction 
+}: NewTransactionModalProps) {
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [description, setDescription] = useState("");
   const [scope, setScope] = useState<TransactionScope>(TransactionScope.PROFESSIONAL);
@@ -27,14 +35,51 @@ export default function NewTransactionModal({ isOpen, onClose, onSave }: NewTran
   // Dynamic lists of categories based on scope and type
   const matchedCategoriesList = ALL_CATEGORIES_MAP[`${scope}_${type}`] || [];
 
-  // Reset category whenever scope or type changes to avoid orphan selections
+  // Reset category whenever scope or type changes to avoid orphan selections, preserving edit values if initialized
   useEffect(() => {
-    if (matchedCategoriesList.length > 0) {
-      setCategory(matchedCategoriesList[0]);
+    if (initialTransaction && initialTransaction.scope === scope && initialTransaction.type === type) {
+      setCategory(initialTransaction.category);
+    } else if (matchedCategoriesList.length > 0) {
+      if (!matchedCategoriesList.includes(category)) {
+        setCategory(matchedCategoriesList[0]);
+      }
     } else {
       setCategory("");
     }
-  }, [scope, type]);
+  }, [scope, type, initialTransaction]);
+
+  // Handle open modal/editing states
+  useEffect(() => {
+    if (isOpen) {
+      if (initialTransaction) {
+        setDate(initialTransaction.date);
+        setDescription(initialTransaction.description);
+        setScope(initialTransaction.scope);
+        setType(initialTransaction.type);
+        setCategory(initialTransaction.category);
+        setAmount(initialTransaction.amount.toString());
+        setPaymentMethod(initialTransaction.paymentMethod || "PIX");
+        
+        let rawNotes = initialTransaction.notes || "";
+        if (rawNotes.startsWith("Aviso: Lançado como despesa pessoal paga incorretamente")) {
+          // Extract remaining text after the prefix
+          const textAfter = rawNotes.replace(/^Aviso: Lançado como despesa pessoal paga incorretamente com o caixa PJ do escritório\.\s*/, "");
+          rawNotes = textAfter;
+        }
+        setNotes(rawNotes);
+        setIsMixedIncident(!!initialTransaction.isAiCategorized);
+      } else {
+        setDate(new Date().toISOString().split("T")[0]);
+        setDescription("");
+        setScope(TransactionScope.PROFESSIONAL);
+        setType(TransactionType.EXPENSE);
+        setAmount("");
+        setPaymentMethod("PIX");
+        setNotes("");
+        setIsMixedIncident(false);
+      }
+    }
+  }, [isOpen, initialTransaction]);
 
   if (!isOpen) return null;
 
@@ -42,19 +87,36 @@ export default function NewTransactionModal({ isOpen, onClose, onSave }: NewTran
     e.preventDefault();
     if (!description.trim() || !amount || parseFloat(amount) <= 0) return;
 
-    onSave({
-      date,
-      description,
-      type,
-      scope,
-      category,
-      amount: parseFloat(amount),
-      paymentMethod,
-      notes: isMixedIncident 
-        ? `Aviso: Lançado como despesa pessoal paga incorretamente com o caixa PJ do escritório. ${notes}`.trim()
-        : notes,
-      isAiCategorized: isMixedIncident // Handled as manual mixed transaction
-    });
+    const actualNotes = isMixedIncident 
+      ? `Aviso: Lançado como despesa pessoal paga incorretamente com o caixa PJ do escritório. ${notes}`.trim()
+      : notes;
+
+    if (initialTransaction && onUpdate) {
+      onUpdate({
+        ...initialTransaction,
+        date,
+        description,
+        type,
+        scope,
+        category,
+        amount: parseFloat(amount),
+        paymentMethod,
+        notes: actualNotes,
+        isAiCategorized: isMixedIncident
+      });
+    } else {
+      onSave({
+        date,
+        description,
+        type,
+        scope,
+        category,
+        amount: parseFloat(amount),
+        paymentMethod,
+        notes: actualNotes,
+        isAiCategorized: isMixedIncident // Handled as manual mixed transaction
+      });
+    }
 
     // Reset Form
     setDescription("");
@@ -65,13 +127,17 @@ export default function NewTransactionModal({ isOpen, onClose, onSave }: NewTran
     onClose();
   };
 
+  const isEditMode = !!initialTransaction;
+
   return (
     <div id="new-transaction-modal" className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl border border-slate-150 overflow-hidden transform transition-all animate-scale-up">
         {/* Header */}
         <div className="flex justify-between items-center bg-slate-950 text-white p-4">
           <div className="flex items-center gap-1.5">
-            <h3 id="modal-title" className="text-sm font-bold tracking-tight">Lançar Nova Movimentação</h3>
+            <h3 id="modal-title" className="text-sm font-bold tracking-tight">
+              {isEditMode ? "Editar Lançamento Existente" : "Lançar Nova Movimentação"}
+            </h3>
           </div>
           <button
             id="close-modal-btn"
@@ -273,10 +339,10 @@ export default function NewTransactionModal({ isOpen, onClose, onSave }: NewTran
             <button
               id="submit-modal-btn"
               type="submit"
-              className="px-5 py-2 bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-xs"
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-xs cursor-pointer"
             >
               <Check className="w-3.5 h-3.5" />
-              Salvar Lançamento
+              {isEditMode ? "Salvar Alterações" : "Salvar Lançamento"}
             </button>
           </div>
         </form>
