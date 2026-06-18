@@ -30,6 +30,7 @@ export interface PriorityBill {
   groupType: "G1" | "G2" | "G3" | "WAIT";
   paid?: boolean;
   notes?: string;
+  month?: string; // YYYY-MM selected month
 }
 
 export interface AISeparationPreview {
